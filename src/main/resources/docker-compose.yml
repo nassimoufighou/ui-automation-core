@@ -1,0 +1,62 @@
+version: '3'
+
+services: 
+  teamcity-server:
+      container_name: teamcity-server
+      user: root
+      volumes: 
+        - ./teamcity/data:/data/teamcity_server/datadir
+        - ./teamcity/logs:/opt/teamcity/logs
+      image: jetbrains/teamcity-server
+      networks:
+        - local
+      ports: 
+        - 8111:8111
+
+  teamcity-chrome-agent:
+      container_name: teamcity-chrome-agent
+      environment:
+        - SERVER_URL=http://teamcity-server:8111
+        - SELENIUM_BROWSER=CHROME
+        - CHROME_REMOTE_BROWSER=http://chrome-browser:4444/wd/hub
+      user: root
+      volumes: 
+        - ./teamcity/agent:/teamcity_agent/conf 
+        #- ./config/chrome/buildAgent.properties:/data/teamcity_agent/conf/buildAgent.properties
+      image: jetbrains/teamcity-minimal-agent
+      networks:
+        - local
+  
+  teamcity-firefox-agent:
+      container_name: teamcity-firefox-agent
+      environment:
+        - SERVER_URL=http://teamcity-server:8111
+        - SELENIUM_BROWSER=FIREFOX
+        - FIREFOX_REMOTE_BROWSER=http://firefox-browser:4444/wd/hub
+      user: root
+      volumes: 
+        - ./teamcity/agent:/teamcity_agent/conf 
+        #- ./config/firefox/buildAgent.properties:/data/teamcity_agent/conf/buildAgent.properties
+      image: jetbrains/teamcity-minimal-agent
+      networks:
+        - local
+
+  chrome-standalone:
+      container_name: chrome-browser
+      image: selenium/standalone-chrome
+      networks:
+        - local
+      ports:
+        - "4100:4444"
+  
+  firefox-standalone:
+      container_name: firefox-browser
+      image: selenium/standalone-firefox
+      networks:
+        - local
+      ports:
+        - "4200:4444"
+  
+networks:
+  local:
+    #driver: custom-driver-1
